@@ -36,6 +36,7 @@ class AdminDao {
 
   async getUsers (groupId, page, count1) {
     let userIds = [];
+    // 除了root的所有用户，分页条件
     const condition = {
       where: {
         username: {
@@ -45,12 +46,15 @@ class AdminDao {
       offset: page * count1,
       limit: count1
     };
+    // 如果有分组id，则增加过滤条件
     if (groupId) {
+      // 获取该分组id下的用户列表
       const userGroup = await UserGroupModel.findAll({
         where: {
           group_id: groupId
         }
       });
+      // 获取该分组id下的所有用户id
       userIds = userGroup.map(v => v.user_id);
       set(condition, 'where.id', {
         [Op.in]: userIds
@@ -58,6 +62,7 @@ class AdminDao {
     }
     const { rows, count } = await UserModel.findAndCountAll(condition);
 
+    // 获取用户下对应的分组信息
     for (const user of rows) {
       const userGroup = await UserGroupModel.findAll({
         where: {
